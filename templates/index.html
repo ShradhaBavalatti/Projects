@@ -1,0 +1,190 @@
+            <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FixWise - Log Analyzer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <h1 class="app-title">
+                        <i class="fas fa-wrench"></i> FixWise
+                    </h1>
+                    <p class="app-subtitle">AI-Powered Log Analyzer</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Upload Section -->
+            <section class="upload-section" id="uploadSection">
+                <div class="upload-card">
+                    <div class="upload-header">
+                        <h2 class="upload-title">
+                            <i class="fas fa-cloud-upload-alt"></i> Upload Log File
+                        </h2>
+                        <p class="upload-subtitle">Analyze your logs to find root causes</p>
+                    </div>
+
+                    <!-- Upload Area -->
+                    <div class="upload-area" id="uploadArea">
+                        <i class="fas fa-file-upload upload-icon"></i>
+                        <p class="upload-text">Drag and drop your log file here</p>
+                        <p class="upload-subtext">or</p>
+                        <button class="btn btn-primary" id="browseBtn" type="button">
+                            <i class="fas fa-folder-open"></i> Browse Files
+                        </button>
+                        <input type="file" id="fileInput" hidden accept=".log,.txt">
+                    </div>
+
+                    <!-- File Requirements -->
+                    <div class="file-requirements">
+                        <h3>Requirements:</h3>
+                        <ul>
+                            <li><i class="fas fa-check-circle"></i> Supported formats: .log, .txt</li>
+                            <li><i class="fas fa-check-circle"></i> Maximum file size: 100 MB</li>
+                            <li><i class="fas fa-check-circle"></i> UTF-8 encoded files</li>
+                        </ul>
+                    </div>
+
+                    <!-- Loading Indicator -->
+                    <div class="loading-indicator" id="loadingIndicator" style="display: none;">
+                        <div class="spinner"></div>
+                        <p id="loadingText">Uploading file...</p>
+                    </div>
+
+                    <!-- Upload Progress -->
+                    <div class="progress-section" id="progressSection" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                        </div>
+                        <p class="progress-text" id="progressText">0%</p>
+                    </div>
+
+                    <!-- Status Messages -->
+                    <div class="status-message" id="statusMessage" style="display: none;"></div>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section" id="resultsSection" style="display: none;">
+                <div class="results-card">
+                    <div class="results-header">
+                        <h2 class="results-title">Analysis Results</h2>
+                        <button class="btn-back" id="backBtn" type="button">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </button>
+                    </div>
+
+                    <!-- File Info -->
+                    <div class="file-info-box">
+                        <div class="info-item">
+                            <span class="info-label">File Name</span>
+                            <span class="info-value" id="resultFileName">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">File Size</span>
+                            <span class="info-value" id="resultFileSize">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Uploaded At</span>
+                            <span class="info-value" id="resultUploadTime">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Total Lines</span>
+                            <span class="info-value" id="resultLineCount">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Analysis Tab Navigation -->
+                    <div class="analysis-tabs">
+                        <button class="tab-btn active" data-tab="analysis">
+                            <i class="fas fa-microscope"></i> Analysis
+                        </button>
+                        <button class="tab-btn" data-tab="logs">
+                            <i class="fas fa-file-lines"></i> Log Content
+                        </button>
+                    </div>
+
+                    <!-- Analysis Section -->
+                    <div class="tab-content active" id="analysis-tab">
+                        <div class="analysis-container">
+                            <!-- Root Cause Analysis -->
+                            <div class="analysis-card root-cause">
+                                <div class="analysis-card-header">
+                                    <h3 class="analysis-title">
+                                        <i class="fas fa-target"></i> Root Cause
+                                    </h3>
+                                    <span class="severity-badge critical" id="rootCauseSeverity">Critical</span>
+                                </div>
+                                <div class="analysis-content">
+                                    <p id="rootCauseText" class="analysis-text">Analyzing...</p>
+                                    <div class="confidence-meter">
+                                        <span class="confidence-label">Confidence:</span>
+                                        <div class="confidence-bar">
+                                            <div class="confidence-fill" id="confidenceFill" style="width: 0%"></div>
+                                        </div>
+                                        <span class="confidence-value" id="confidenceValue">0%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Error Details -->
+                            <div class="analysis-card error-details">
+                                <div class="analysis-card-header">
+                                    <h3 class="analysis-title">
+                                        <i class="fas fa-exclamation-triangle"></i> Error Details
+                                    </h3>
+                                </div>
+                                <div class="analysis-content">
+                                    <div class="error-item" id="errorDetails">
+                                        <p>Scanning logs for errors...</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Recommended Solutions -->
+                            <div class="analysis-card solutions">
+                                <div class="analysis-card-header">
+                                    <h3 class="analysis-title">
+                                        <i class="fas fa-lightbulb"></i> Recommended Solutions
+                                    </h3>
+                                </div>
+                                <div class="analysis-content">
+                                    <div class="solutions-list" id="solutionsList">
+                                        <p>Finding solutions...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Log Content Tab -->
+                    <div class="tab-content" id="logs-tab">
+                        <div class="log-container">
+                            <h3 class="log-title">Log Content</h3>
+                            <div class="log-content" id="logContent">
+                                <pre id="logText"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2024 FixWise. All rights reserved. | Powered by AI</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
