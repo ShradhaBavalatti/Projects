@@ -1,0 +1,145 @@
+============================================================
+APPLICATION STARTUP
+============================================================
+2026-09-03 17:45:01,102 INFO  [main] Application starting...
+2026-09-03 17:45:01,204 INFO  [config] Loading environment variables
+2026-09-03 17:45:01,587 INFO  [database] Connecting to PostgreSQL database...
+2026-09-03 17:45:02,104 INFO  [database] Connection established successfully
+2026-09-03 17:45:02,776 INFO  [scheduler] Initializing background jobs
+2026-09-03 17:45:03,081 INFO  [server] Server started on port 8080
+
+============================================================
+USER REQUEST
+============================================================
+2026-09-03 18:02:11,224 INFO  [api-gateway] Request received
+RequestID: req-8a72f1a3
+UserID: user-44521
+Endpoint: POST /api/orders/create
+
+2026-09-03 18:02:11,229 INFO  [auth-service] Validating JWT token
+2026-09-03 18:02:11,241 INFO  [auth-service] Token validation successful
+
+2026-09-03 18:02:11,377 INFO  [order-service] Creating order
+OrderID: ORD-982144
+CustomerID: CUST-12004
+ItemsCount: 5
+
+============================================================
+DATABASE ERROR
+============================================================
+2026-09-03 18:02:12,614 ERROR [order-service] Failed to persist order
+
+org.postgresql.util.PSQLException:
+ERROR: duplicate key value violates unique constraint "orders_pkey"
+Detail: Key (order_id)=(ORD-982144) already exists.
+
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2676)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2366)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:356)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:496)
+	at org.postgresql.jdbc.PgPreparedStatement.executeUpdate(PgPreparedStatement.java:146)
+	at com.company.order.OrderRepository.save(OrderRepository.java:214)
+	at com.company.order.OrderService.createOrder(OrderService.java:98)
+
+============================================================
+RETRY ATTEMPT
+============================================================
+2026-09-03 18:02:13,102 WARN  [order-service] Retrying operation...
+Attempt: 1 of 3
+
+2026-09-03 18:02:14,307 WARN  [order-service] Retrying operation...
+Attempt: 2 of 3
+
+============================================================
+CACHE FAILURE
+============================================================
+2026-09-03 18:02:15,111 ERROR [cache-service]
+
+redis.exceptions.ConnectionError:
+Error 111 connecting to redis-prod.company.net:6379.
+Connection refused.
+
+Traceback (most recent call last):
+  File "/app/cache/client.py", line 52, in get
+    return redis_client.get(key)
+  File "/usr/local/lib/python3.11/site-packages/redis/client.py", line 1269, in get
+    return self.execute_command("GET", name)
+redis.exceptions.ConnectionError:
+Error 111 connecting to redis-prod.company.net:6379
+
+============================================================
+DOWNSTREAM SERVICE FAILURE
+============================================================
+2026-09-03 18:02:16,813 ERROR [payment-service]
+
+HTTP 503 Service Unavailable
+
+POST https://payment.company.net/api/v2/charge
+
+Response:
+{
+  "errorCode": "PAYMENT_SERVICE_DOWN",
+  "message": "Payment processing service unavailable"
+}
+
+============================================================
+OUT OF MEMORY WARNING
+============================================================
+2026-09-03 18:02:18,444 WARN [system-monitor]
+
+Memory Usage:
+Used: 15.6 GB
+Available: 410 MB
+Threshold: 90%
+
+Potential memory leak detected in worker pool
+
+============================================================
+FINAL EXCEPTION
+============================================================
+2026-09-03 18:02:21,109 ERROR [api-gateway]
+
+Unhandled Exception
+
+java.lang.RuntimeException:
+Order creation failed after 3 retries
+
+	at com.company.order.OrderController.submitOrder(OrderController.java:182)
+	at com.company.order.OrderService.createOrder(OrderService.java:145)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+
+Caused by:
+org.postgresql.util.PSQLException:
+ERROR: duplicate key value violates unique constraint "orders_pkey"
+
+============================================================
+REQUEST FAILED
+============================================================
+2026-09-03 18:02:21,141 ERROR [api-gateway]
+
+RequestID: req-8a72f1a3
+StatusCode: 500
+
+Response:
+{
+  "success": false,
+  "error": "Order creation failed after multiple retries",
+  "timestamp": "2026-09-03T18:02:21Z"
+}
+
+============================================================
+ROOT CAUSE SUMMARY
+============================================================
+Primary Root Cause:
+- Duplicate order ID caused database insertion failure.
+
+Secondary Issues:
+- Redis cache unavailable.
+- Payment service returned HTTP 503.
+- High memory consumption detected.
+
+Impact:
+- Order creation request failed.
+- User received HTTP 500 Internal Server Error.
+============================================================
+``
